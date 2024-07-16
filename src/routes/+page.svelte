@@ -132,9 +132,9 @@
 
 				<div
 					class={`w-8 h-8 flex items-center justify-center rounded-md 
-					${selected && ' border-2 border-orange-500'} 
-					${exact ? 'bg-blue-900 text-white' : 'bg-white'} 
-					${close && 'border-2 border-blue-900'} 
+					${selected && ' border-2 border-secondary'} 
+					${exact ? 'bg-primary text-white' : 'bg-white'} 
+					${close && 'border-2 border-primary'} 
 					${currentRow && 'drop-shadow-md'} 
 					${won && row >= tusmo.answers.length && 'hidden'}
 					duration-200`}
@@ -155,7 +155,7 @@
 	{/if}
 	{#if won || failed}
 		<button
-			class="mx-auto w-fit p-2 rounded-md bg-blue-900 text-white hover:bg-blue-950 duration-200"
+			class="mx-auto w-fit p-2 rounded-md bg-secondary text-white hover:bg-secondary-dark duration-200"
 			on:click={reset}>Rejouer</button
 		>
 	{/if}
@@ -167,7 +167,7 @@
 					{@const exact = tusmo.keyboard.get(letter.toLocaleUpperCase()) === PositionEnum.EXACT}
 					{@const close = tusmo.keyboard.get(letter.toLocaleUpperCase()) === PositionEnum.CLOSE}
 					<button
-						class={`p-2 w-6 hover:bg-slate-200 duration-200 ${exact ? 'bg-blue-900 text-white' : 'bg-white'} ${close && 'border-2 border-blue-900'} ${missing && 'bg-slate-200 text-slate-400'}`}
+						class={`p-2 w-8 hover:bg-slate-200 duration-200 ${exact ? 'bg-primary text-white' : 'bg-white'} ${close && 'border-2 border-primary'} ${missing && 'bg-slate-200 text-slate-400'}`}
 						aria-label={letter}
 						on:click|preventDefault={() => updateLetter(letter)}
 						disabled={failed || won}
