@@ -1,4 +1,6 @@
 <script lang="ts">
+	import Keyboard from '$lib/components/Keyboard.svelte';
+	import TusmoGrid from '$lib/components/TusmoGrid.svelte';
 	import { PositionEnum } from '$lib/models/positionEnum';
 	import type { IState } from '$lib/models/tusmo';
 	import { getWord } from '$lib/utils/getWord';
@@ -121,29 +123,8 @@
 </svelte:head>
 
 <div class="flex flex-col gap-4">
-	{#each Array.from(Array(tusmo.nbOfTry).keys()) as row (row)}
-		<div class="flex gap-1 justify-center items-center">
-			{#each Array.from(Array(wordLength).keys()) as column (column)}
-				{@const currentRow = row === selectedRow}
-				{@const answer = tusmo.answers[row]?.[column]}
-				{@const selected = selectedRow === row && selectedIndex === column}
-				{@const exact = answer === PositionEnum.EXACT}
-				{@const close = answer === PositionEnum.CLOSE}
+	<TusmoGrid nbOfTry={tusmo.nbOfTry} {selectedIndex} {selectedRow} {tusmo} {won} />
 
-				<div
-					class={`w-8 h-8 flex items-center justify-center rounded-md 
-					${selected && ' border-2 border-secondary'} 
-					${exact ? 'bg-primary text-white' : 'bg-white'} 
-					${close && 'border-2 border-primary'} 
-					${currentRow && 'drop-shadow-md'} 
-					${won && row >= tusmo.answers.length && 'hidden'}
-					duration-200`}
-				>
-					{tusmo.guesses[row]?.[column] ?? ''}
-				</div>
-			{/each}
-		</div>
-	{/each}
 	{#if failed}
 		<div class="text-red-500 text-center">Perdu ! La réponse était {tusmo.answer}</div>
 	{/if}
@@ -153,48 +134,22 @@
 			<Confetti x={[-1, 1]} infinite cone />
 		</div>
 	{/if}
+
 	{#if won || failed}
 		<button
 			class="mx-auto w-fit p-2 rounded-md bg-secondary text-white hover:bg-secondary-dark duration-200"
 			on:click={reset}>Rejouer</button
 		>
+	{:else}
+		<Keyboard
+			{tusmo}
+			on:update={(e) => {
+				if (e.detail) {
+					updateLetter(e.detail);
+				}
+			}}
+			on:remove={removeLetter}
+			on:enter={enter}
+		/>
 	{/if}
-	<div class="flex flex-col gap-1">
-		{#each ['azertyuiop', 'qsdfghjklm', 'wxcvbn'] as row}
-			<div class="flex gap-1 justify-center">
-				{#each row as letter}
-					{@const missing = tusmo.keyboard.get(letter.toLocaleUpperCase()) === PositionEnum.MISSING}
-					{@const exact = tusmo.keyboard.get(letter.toLocaleUpperCase()) === PositionEnum.EXACT}
-					{@const close = tusmo.keyboard.get(letter.toLocaleUpperCase()) === PositionEnum.CLOSE}
-					<button
-						class={`p-2 w-8 hover:bg-slate-200 duration-200 ${exact ? 'bg-primary text-white' : 'bg-white'} ${close && 'border-2 border-primary'} ${missing && 'bg-slate-200 text-slate-400'}`}
-						aria-label={letter}
-						on:click|preventDefault={() => updateLetter(letter)}
-						disabled={failed || won}
-					>
-						{letter}
-					</button>
-				{/each}
-			</div>
-		{/each}
-
-		<div class="flex gap-1 mx-auto">
-			<button
-				class="text-xs bg-white p-2 hover:bg-slate-200 duration-200"
-				aria-label={'Back'}
-				on:click|preventDefault={removeLetter}
-				disabled={failed || won}
-			>
-				BACK ←
-			</button>
-			<button
-				class="text-xs bg-white p-2 hover:bg-slate-200 duration-200"
-				aria-label={'Enter'}
-				on:click|preventDefault={enter}
-				disabled={failed || won}
-			>
-				ENTER &#x21A9;
-			</button>
-		</div>
-	</div>
 </div>
