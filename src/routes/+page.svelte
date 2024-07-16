@@ -2,6 +2,7 @@
 	import { PositionEnum } from '$lib/models/positionEnum';
 	import type { IState } from '$lib/models/tusmo';
 	import { getWord } from '$lib/utils/getWord';
+	import { Confetti } from 'svelte-confetti';
 
 	const wordLength = 5;
 
@@ -148,6 +149,9 @@
 	{/if}
 	{#if won}
 		<div class="text-green-500 text-center">Gagné !</div>
+		<div class="mx-auto">
+			<Confetti x={[-1, 1]} infinite cone />
+		</div>
 	{/if}
 	{#if won || failed}
 		<button
@@ -163,7 +167,7 @@
 					{@const exact = tusmo.keyboard.get(letter.toLocaleUpperCase()) === PositionEnum.EXACT}
 					{@const close = tusmo.keyboard.get(letter.toLocaleUpperCase()) === PositionEnum.CLOSE}
 					<button
-						class={`p-2 hover:bg-slate-200 duration-200 ${exact ? 'bg-blue-900 text-white' : 'bg-white'} ${close && 'border-2 border-blue-900'} ${missing && 'bg-slate-200 text-slate-400'}`}
+						class={`p-2 w-6 hover:bg-slate-200 duration-200 ${exact ? 'bg-blue-900 text-white' : 'bg-white'} ${close && 'border-2 border-blue-900'} ${missing && 'bg-slate-200 text-slate-400'}`}
 						aria-label={letter}
 						on:click|preventDefault={() => updateLetter(letter)}
 						disabled={failed || won}
