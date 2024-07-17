@@ -2,17 +2,15 @@
 	import { PositionEnum } from '$lib/models/positionEnum';
 	import type { IState } from '$lib/models/tusmo';
 
-	export let nbOfTry = 6;
-	export let wordLength = 5;
 	export let selectedRow: number;
 	export let selectedIndex: number;
 	export let tusmo: IState;
 	export let won: boolean;
 </script>
 
-{#each Array.from(Array(nbOfTry).keys()) as row (row)}
+{#each Array.from(Array(tusmo.nbOfTry).keys()) as row (row)}
 	<div class="flex gap-1 justify-center items-center">
-		{#each Array.from(Array(wordLength).keys()) as column (column)}
+		{#each Array.from(Array(tusmo.wordLength).keys()) as column (column)}
 			{@const currentRow = row === selectedRow}
 			{@const answer = tusmo.answers[row]?.[column]}
 			{@const selected = selectedRow === row && selectedIndex === column}

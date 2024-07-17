@@ -3,5 +3,6 @@ export interface IState {
 	answers: string[];
 	answer: string;
 	nbOfTry: number;
+	wordLength: number;
 	keyboard: Map<string, string>;
 }

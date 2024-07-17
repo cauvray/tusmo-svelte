@@ -1,27 +1,29 @@
 <script lang="ts">
+	import GameSettings from '$lib/components/GameSettings.svelte';
 	import Keyboard from '$lib/components/Keyboard.svelte';
 	import TusmoGrid from '$lib/components/TusmoGrid.svelte';
 	import { PositionEnum } from '$lib/models/positionEnum';
+	import type { Setting } from '$lib/models/Setting';
 	import type { IState } from '$lib/models/tusmo';
 	import { getWord } from '$lib/utils/getWord';
 	import { Confetti } from 'svelte-confetti';
 
-	const wordLength = 5;
-
 	const initialState: IState = {
 		guesses: Array(6).fill(''),
 		answers: [],
-		answer: getWord(),
+		answer: '',
 		nbOfTry: 6,
+		wordLength: 5,
 		keyboard: new Map()
 	};
 
 	$: tusmo = structuredClone(initialState);
 
+	$: gameIsStarted = false;
 	$: selectedRow = 0;
 	$: selectedIndex = 0;
 
-	$: won = tusmo.answers.at(-1) === PositionEnum.EXACT.repeat(wordLength);
+	$: won = tusmo.answers.at(-1) === PositionEnum.EXACT.repeat(tusmo.wordLength);
 	$: failed = tusmo.answers.length === tusmo.nbOfTry && !won;
 
 	const isLetter = (keyCode: number) => {
@@ -29,7 +31,7 @@
 	};
 
 	const keydown = (event: KeyboardEvent) => {
-		if (event.metaKey || failed || won) return;
+		if (!gameIsStarted || event.metaKey || failed || won) return;
 
 		if (event.key === 'Enter') {
 			enter();
@@ -41,11 +43,11 @@
 	};
 
 	const updateLetter = (letter: string) => {
-		if (tusmo.guesses[selectedRow].length === wordLength) {
+		if (tusmo.guesses[selectedRow].length === tusmo.wordLength) {
 			return;
 		}
 		tusmo.guesses[selectedRow] += letter.toLocaleUpperCase();
-		if (selectedIndex < wordLength - 1) {
+		if (selectedIndex < tusmo.wordLength - 1) {
 			selectedIndex += 1;
 		}
 	};
@@ -58,17 +60,17 @@
 	};
 
 	const enter = () => {
-		if (tusmo.guesses[selectedRow].length === wordLength) {
+		if (tusmo.guesses[selectedRow].length === tusmo.wordLength) {
 			const guessWord = tusmo.guesses[selectedRow];
 			const letters: string[] = Array.from(guessWord);
 			//TODO: check if word exist
 
 			const available = Array.from(tusmo.answer);
-			const answer = Array(wordLength).fill('_');
+			const answer = Array(tusmo.wordLength).fill('_');
 			const mapForKeyboard = new Map<string, string>();
 
 			// first, find exact matches
-			for (let i = 0; i < wordLength; i += 1) {
+			for (let i = 0; i < tusmo.wordLength; i += 1) {
 				if (letters[i] === available[i]) {
 					answer[i] = PositionEnum.EXACT;
 					available[i] = ' ';
@@ -79,7 +81,7 @@
 			// then find close matches (this has to happen
 			// in a second step, otherwise an early close
 			// match can prevent a later exact match)
-			for (let i = 0; i < wordLength; i += 1) {
+			for (let i = 0; i < tusmo.wordLength; i += 1) {
 				if (answer[i] === '_') {
 					const index = available.indexOf(letters[i]);
 					if (index !== -1) {
@@ -107,9 +109,16 @@
 		}
 	};
 
+	const startGame = (e: CustomEvent<Setting>) => {
+		gameIsStarted = true;
+		tusmo.wordLength = e.detail.wordlength;
+		tusmo.nbOfTry = e.detail.nbOfTry;
+		tusmo.answer = getWord(tusmo.wordLength);
+	};
 	const reset = () => {
+		gameIsStarted = false;
 		tusmo = structuredClone(initialState);
-		tusmo.answer = getWord();
+		tusmo.answer = getWord(tusmo.wordLength);
 		selectedIndex = 0;
 		selectedRow = 0;
 	};
@@ -123,7 +132,11 @@
 </svelte:head>
 
 <div class="flex flex-col gap-4">
-	<TusmoGrid nbOfTry={tusmo.nbOfTry} {selectedIndex} {selectedRow} {tusmo} {won} />
+	{#if !gameIsStarted}
+		<GameSettings on:start={startGame} />
+	{:else}
+		<TusmoGrid {selectedIndex} {selectedRow} {tusmo} {won} />
+	{/if}
 
 	{#if failed}
 		<div class="text-red-500 text-center">Perdu ! La réponse était {tusmo.answer}</div>
@@ -140,7 +153,7 @@
 			class="mx-auto w-fit p-2 rounded-md bg-secondary text-white hover:bg-secondary-dark duration-200"
 			on:click={reset}>Rejouer</button
 		>
-	{:else}
+	{:else if gameIsStarted && !won && !failed}
 		<Keyboard
 			{tusmo}
 			on:update={(e) => {
